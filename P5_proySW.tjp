@@ -5,7 +5,7 @@
  * some elements of it
  */
 
-project pSix "Web Game"  2024-12-15 +5m {
+project pSix "Web Game"  2024-12-15 +6m {
   # Set the default time zone for the project. If not specified, UTC
   # is used.
   timezone "Europe/Paris"
@@ -19,7 +19,7 @@ project pSix "Web Game"  2024-12-15 +5m {
   # the project reports. If not specified, the current day will be
   # used, but this will likely be outside of the project range, so it
   # can't be seen in the reports.
-  now 2025-02-25-13:00
+  now 2025-04-11-17:00
   # The currency for all money values is the US Dollar.
   currency "EUR"
 
@@ -51,6 +51,11 @@ account cost "Project Cost" {
 account rev "Payments"
 # The Profit&Loss analysis should be rev - cost accounts.
 balance cost rev
+
+resource diego"Diego Simón Iñiguez" {
+  workinghours mon - fri 10:00 - 14:00
+  email "869800@unizar.es"
+}
 
 resource boss "Liz Bullock" {
   email "iiii@unizar.es"
@@ -139,6 +144,11 @@ task WMGame "Web & Mobile Game" {
       effort 15d
       allocate dev2, dev3
       depends WMGame.twebF.tGUId
+      journalentry 2025-04-11 "Delayed integration with backend" {
+        author dev2
+        alert yellow
+        summary "Integration with backend was delayed due to unexpected API changes. Will need to reschedule some tests."
+      }
     }
     task tFEt "Web Front End Test" {
       effort 6d
@@ -147,13 +157,42 @@ task WMGame "Web & Mobile Game" {
     }    
   }
 
+task tmobF "Mobile Front End" {
+    purge chargeset
+    chargeset mFront
+    responsible diego
+    depends WMGame.twebF.tGUId
+    task tmGUId "Mobile GUI Design" {
+      effort 7d
+      allocate diego
+    }
+    task tmFEc "Mobile Front End Construction" {
+      effort 9d
+      allocate diego
+      depends WMGame.tmobF.tmGUId
+    }
+    task tmFEt "Mobile Front End Test" {
+      effort 6d
+      allocate diego
+      depends WMGame.tmobF.tmFEc
+    }
+  }
+  task tcloud "Cloud Deployment" {
+    effort 7d
+    allocate diego
+    depends WMGame.tback.tbackDev
+  }
+
   task ttest "Acceptance tests" {
       effort 10d
       allocate boss
       allocate dev2
       actual:effort 20d
+      start 2025-05-15
       depends WMGame.twebF
       depends WMGame.tback
+      depends WMGame.tmobF
+      depends WMGame.tcloud
       }
 
     
@@ -278,6 +317,14 @@ macro AlertColor [
   cellcolor plan.alert = 1 "#D0D000" # yellow
   cellcolor plan.alert = 2 "#D00000" # red
 ]
+
+taskreport initial_plan "Initial Plan" {
+  formats html
+  headline "Planificación Inicial"
+  columns bsi, name, start, end, effort
+  loadunit hours
+  timeformat "%Y-%m-%d"
+}
 
 taskreport status "" {
   columns bsi { width 50 title 'WBS' }, name { width 150 },
